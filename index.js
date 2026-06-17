@@ -151,4 +151,11 @@ client.on(Events.GuildScheduledEventCreate, async (event) => {
   }
 });
 
+client.on('raw', (packet) => {
+  if (packet.t?.includes('GUILD_SCHEDULED_EVENT')) {
+    console.log('RAW EVENT:', packet.t);
+    console.log(JSON.stringify(packet.d, null, 2));
+  }
+});
+
 client.login(DISCORD_TOKEN);
