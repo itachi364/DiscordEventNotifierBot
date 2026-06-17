@@ -108,6 +108,11 @@ function resolveLocation(event) {
 }
 
 client.on(Events.GuildScheduledEventCreate, async (event) => {
+  console.log('GuildScheduledEventCreate recibido');
+  console.log(`Evento: ${event.name}`);
+  console.log(`Evento ID: ${event.id}`);
+  console.log(`Guild ID: ${event.guildId}`);
+
   try {
     const channel = await event.guild.channels.fetch(EVENTS_CHANNEL_ID).catch(() => null);
 
