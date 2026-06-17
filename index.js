@@ -35,8 +35,35 @@ const client = new Client({
   ]
 });
 
-client.once(Events.ClientReady, (c) => {
+client.once(Events.ClientReady, async (c) => {
   console.log(`EventNotifierBot conectado como ${c.user.tag}`);
+  console.log(`Cliente ID: ${c.user.id}`);
+
+  console.log('Servidores donde está el bot:');
+  for (const guild of c.guilds.cache.values()) {
+    console.log(`- ${guild.name} (${guild.id})`);
+  }
+
+  try {
+    const channel = await c.channels.fetch(EVENTS_CHANNEL_ID);
+
+    if (!channel) {
+      console.error(`No se encontró el canal con ID ${EVENTS_CHANNEL_ID}`);
+      return;
+    }
+
+    console.log(`Canal encontrado: ${channel.name} (${channel.id})`);
+
+    if (!channel.isTextBased()) {
+      console.error('El canal configurado no es de texto.');
+      return;
+    }
+
+    await channel.send('✅ EventNotifierBot está conectado y puede escribir en este canal.');
+    console.log('Mensaje de prueba enviado correctamente.');
+  } catch (error) {
+    console.error('Error enviando mensaje de prueba:', error);
+  }
 });
 
 function buildMention() {
