@@ -95,7 +95,7 @@ async function notifyEvent(event, source = 'unknown') {
   const channel = await client.channels.fetch(EVENTS_CHANNEL_ID).catch(() => null);
 
   if (!channel || !channel.isTextBased()) {
-    console.warn(`No se encontro un canal de texto valido con ID ${EVENTS_CHANNEL_ID}`);
+    console.error(`No se encontro un canal de texto valido con ID ${EVENTS_CHANNEL_ID}`);
     return;
   }
 
@@ -135,16 +135,12 @@ async function loadExistingEvents() {
   for (const event of events.values()) {
     notifiedEvents.add(event.id);
   }
-
-  console.log(`Eventos existentes registrados para evitar duplicados: ${notifiedEvents.size}`);
 }
 
 async function pollScheduledEvents() {
   try {
     const guild = await client.guilds.fetch(GUILD_ID);
     const events = await guild.scheduledEvents.fetch();
-
-    console.log(`Polling eventos programados. Total actual: ${events.size}`);
 
     for (const event of events.values()) {
       if (!notifiedEvents.has(event.id)) {
@@ -157,57 +153,29 @@ async function pollScheduledEvents() {
 }
 
 client.once(Events.ClientReady, async (c) => {
-  console.log(`EventNotifierBot conectado como ${c.user.tag}`);
-  console.log(`Cliente ID: ${c.user.id}`);
-
-  console.log('Servidores donde está el bot:');
-  for (const guild of c.guilds.cache.values()) {
-    console.log(`- ${guild.name} (${guild.id})`);
-  }
-
   try {
     const channel = await c.channels.fetch(EVENTS_CHANNEL_ID);
 
-    if (!channel) {
-      console.error(`No se encontró el canal con ID ${EVENTS_CHANNEL_ID}`);
+    if (!channel || !channel.isTextBased()) {
+      console.error(`Canal de notificaciones invalido: ${EVENTS_CHANNEL_ID}`);
       return;
     }
-
-    console.log(`Canal encontrado: ${channel.name} (${channel.id})`);
-
-    if (!channel.isTextBased()) {
-      console.error('El canal configurado no es de texto.');
-      return;
-    }
-
-    console.log('El canal configurado es valido y el bot puede acceder.');
 
     await loadExistingEvents();
 
     setInterval(pollScheduledEvents, pollIntervalMs);
 
-    console.log(`Polling iniciado cada ${POLL_INTERVAL_SECONDS} segundos.`);
+    console.log(`EventNotifierBot conectado como ${c.user.tag}. Polling cada ${POLL_INTERVAL_SECONDS} segundos.`);
   } catch (error) {
     console.error('Error inicializando bot:', error);
   }
 });
 
 client.on(Events.GuildScheduledEventCreate, async (event) => {
-  console.log('GuildScheduledEventCreate recibido');
-  console.log(`Evento: ${event.name}`);
-  console.log(`Evento ID: ${event.id}`);
-  console.log(`Guild ID: ${event.guildId}`);
-
   try {
     await notifyEvent(event, 'gateway');
   } catch (error) {
     console.error('Error notificando evento creado por gateway:', error);
-  }
-});
-
-client.on('raw', (packet) => {
-  if (packet.t?.includes('GUILD_SCHEDULED_EVENT')) {
-    console.log('RAW EVENT:', packet.t);
   }
 });
 
